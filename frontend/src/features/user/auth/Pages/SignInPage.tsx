@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SimpleHeader, Footer } from '@components/layout';
 import SignInForm from '../Components/SignInForm';
 import { type SignInFormData } from '../schemas/signInSchema';
+import { login } from '@/services/api/authService';
 
 const SignInPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,16 +13,16 @@ const SignInPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Sign in data:', data);
+      const response = await login({ email: data.email, password: data.password });
+      if (response?.success) {
+        navigate('/user/dashboard');
 
-      // TODO: Handle successful sign in
-      // For now, simulate successful authentication
-      navigate('/user/dashboard');
+      } else {
+        throw new Error('Login failed');
+      }
     } catch (error) {
-      console.error('Sign in error:', error);
-      alert('Invalid credentials. Please try again.');
+      const message = error?.message || error?.data?.detail || 'Invalid credentials. Please try again.';
+      alert(message);
     } finally {
       setIsLoading(false);
     }

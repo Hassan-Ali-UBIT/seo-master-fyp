@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@components/layout/DashboardLayout';
+import {
+  getLinkedInAuthorizationUrl,
+  handleLinkedInOAuthCallback,
+  type UserProfileSnapshot,
+} from '@/services/api/linkedinOptimizerService';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -62,8 +67,11 @@ interface LinkedInData {
 
 const LinkedInToolPage: React.FC = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<Step>(5);
+  const [searchParams] = useSearchParams();
+  const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isConnectingLinkedIn, setIsConnectingLinkedIn] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const [data, setData] = useState<LinkedInData>({
     connectionMethod: null,
     linkedinConnected: false,
@@ -74,6 +82,53 @@ const LinkedInToolPage: React.FC = () => {
     targetSkills: [],
     analysisComplete: false,
   });
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+      const error = searchParams.get('error');
+
+      if (error) {
+        setOauthError(`LinkedIn OAuth error: ${error}`);
+        return;
+      }
+
+      if (code) {
+        try {
+          setIsConnectingLinkedIn(true);
+          const response = await handleLinkedInOAuthCallback({ code, state: state || undefined });
+
+          const profileData = response?.data as UserProfileSnapshot;
+
+          if (profileData) {
+            // Extract profile data and proceed
+            setData({
+              ...data,
+              connectionMethod: 'linkedin',
+              linkedinConnected: true,
+              currentProfileData: {
+                headline: profileData.headline_text || '',
+                about: profileData.about_text || '',
+                experience: profileData.experience_text || '',
+                skills: profileData.skills_text?.split(',').map((s: string) => s.trim()) || [],
+              },
+            });
+            nextStep();
+          }
+        } catch (err: any) {
+          const errorMsg = err?.message || 'Failed to connect with LinkedIn';
+          setOauthError(errorMsg);
+          console.error('OAuth callback error:', err);
+        } finally {
+          setIsConnectingLinkedIn(false);
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, [searchParams]);
 
   const handleLogout = () => {
     navigate('/');
@@ -92,21 +147,26 @@ const LinkedInToolPage: React.FC = () => {
   };
 
   const handleLinkedInConnect = async () => {
-    // TODO: Implement LinkedIn OAuth
-    console.log('Connecting to LinkedIn...');
-    // Simulate OAuth and data retrieval
-    setData({
-      ...data,
-      connectionMethod: 'linkedin',
-      linkedinConnected: true,
-      currentProfileData: {
-        headline: 'Software Engineer | Full Stack Developer',
-        about: 'Passionate about building scalable web applications...',
-        experience: '5 years in web development',
-        skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
-      },
-    });
-    nextStep();
+    setIsConnectingLinkedIn(true);
+    setOauthError(null);
+
+    try {
+      const response = await getLinkedInAuthorizationUrl();
+      const authUrl = response?.data?.authorization_url;
+
+      if (authUrl) {
+        // Redirect to LinkedIn OAuth authorization
+        window.location.href = authUrl;
+      } else {
+        setOauthError('Failed to get LinkedIn authorization URL');
+      }
+    } catch (err: any) {
+      const errorMsg = err?.message || 'Failed to initiate LinkedIn OAuth';
+      setOauthError(errorMsg);
+      console.error('LinkedIn OAuth error:', err);
+    } finally {
+      setIsConnectingLinkedIn(false);
+    }
   };
 
   const handleManualEntry = () => {
@@ -244,6 +304,13 @@ Always excited to tackle challenging problems and build innovative solutions tha
         Choose how you'd like to provide your LinkedIn profile information.
       </p>
 
+      {/* OAuth Error Display */}
+      {oauthError && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700 text-sm">{oauthError}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* LinkedIn OAuth Option */}
         <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-600 transition-colors cursor-pointer">
@@ -259,9 +326,10 @@ Always excited to tackle challenging problems and build innovative solutions tha
             </p>
             <button
               onClick={handleLinkedInConnect}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isConnectingLinkedIn}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Connect LinkedIn
+              {isConnectingLinkedIn ? 'Connecting...' : 'Connect LinkedIn'}
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import LandingPage from '@features/user/landingPage/Pages/LandingPage';
 import SignUpPage from '@features/user/auth/Pages/SignUpPage';
 import SignInPage from '@features/user/auth/Pages/SignInPage';
 import ForgotPasswordPage from '@features/user/auth/Pages/ForgotPasswordPage';
+import ResetPasswordPage from '@features/user/auth/Pages/ResetPasswordPage';
 import CompleteProfilePage from '@features/user/auth/Pages/CompleteProfilePage';
 import OTPPage from '@features/user/auth/Pages/OTPPage';
 import UserDashboard from '@features/user/dashboard/Pages/UserDashboard';
@@ -29,6 +30,7 @@ const AppRouter: React.FC = () => {
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/complete-profile" element={<CompleteProfilePage />} />
         <Route path="/otp" element={<OTPPage />} />
 

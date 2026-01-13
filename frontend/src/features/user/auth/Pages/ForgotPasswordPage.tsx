@@ -1,29 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SimpleHeader, Footer } from '@components/layout';
 import ForgotPasswordForm from '../Components/ForgotPasswordForm';
+import { sendForgotPasswordOtp } from '@/services/api/authService';
 import { type ForgotPasswordFormData } from '../schemas/forgotPasswordSchema';
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
+  const submitLockRef = useRef(false);
 
   const handleSubmit = async (data: ForgotPasswordFormData) => {
+    // Prevent concurrent submissions
+    if (submitLockRef.current || isLoading) {
+      return;
+    }
+
+    submitLockRef.current = true;
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Forgot password request for:', data.email);
-
-      // Show success message
-      setIsEmailSent(true);
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      alert('Failed to send reset link. Please try again.');
+      await sendForgotPasswordOtp(data.email);
+      // Navigate to OTP page with email and type for forgot password flow
+      navigate('/otp', { state: { email: data.email, type: 'forget_password' } });
+    } catch (error: any) {
+      const message = error?.message || 'Failed to send reset code. Please try again.';
+      alert(message);
     } finally {
       setIsLoading(false);
+      submitLockRef.current = false;
     }
   };
 

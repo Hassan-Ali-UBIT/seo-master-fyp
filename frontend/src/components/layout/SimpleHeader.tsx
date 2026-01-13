@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuthButtonGroup } from '../ui';
+import logoSvg from '@assets/images/logo.svg';
 
 interface SimpleHeaderProps {
   onSignIn?: () => void;
@@ -26,10 +27,17 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
           <div className="flex-shrink-0">
             <button
               onClick={onLogoClick}
-              className="text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors duration-200 focus:outline-none rounded-md px-2 py-1"
+              className="flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors duration-200 focus:outline-none rounded-md px-2 py-1"
               aria-label="Go to homepage"
             >
-              SEO Master Pro
+              {/* Logo Image */}
+              <img
+                src={logoSvg}
+                alt="SEO Master Pro Logo"
+                className="w-10 h-10 sm:w-12 sm:h-12"
+              />
+              {/* Brand Name */}
+              <span className="hidden sm:block">SEO Master Pro</span>
             </button>
           </div>
 

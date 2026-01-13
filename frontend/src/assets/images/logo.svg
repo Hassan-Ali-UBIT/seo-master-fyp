@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Outer circle with gradient border -->
+  <defs>
+    <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FB923C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark circle background -->
+  <circle cx="100" cy="100" r="95" fill="#1F2937" stroke="url(#borderGradient)" stroke-width="8"/>
+
+  <!-- Top orange arrow -->
+  <path d="M 100 50 L 70 80 L 80 80 L 80 90 L 120 90 L 120 80 L 130 80 Z" fill="url(#orangeGradient)"/>
+
+  <!-- SEO icon in top arrow -->
+  <circle cx="100" cy="70" r="8" fill="#FCD34D"/>
+  <text x="100" y="74" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#1F2937" text-anchor="middle">SEO</text>
+
+  <!-- Middle green arrow -->
+  <path d="M 100 95 L 85 110 L 92 110 L 92 120 L 108 120 L 108 110 L 115 110 Z" fill="url(#greenGradient)"/>
+
+  <!-- Bottom cyan arrow -->
+  <path d="M 100 125 L 88 137 L 94 137 L 94 145 L 106 145 L 106 137 L 112 137 Z" fill="url(#cyanGradient)"/>
+
+  <!-- Circuit connection dots -->
+  <circle cx="65" cy="75" r="3" fill="#06B6D4"/>
+  <circle cx="135" cy="75" r="3" fill="#F97316"/>
+  <circle cx="75" cy="105" r="3" fill="#10B981"/>
+  <circle cx="125" cy="105" r="3" fill="#7C3AED"/>
+  <circle cx="80" cy="135" r="3" fill="#06B6D4"/>
+  <circle cx="120" cy="135" r="3" fill="#F97316"/>
+
+  <!-- Circuit lines -->
+  <line x1="68" y1="75" x2="85" y2="80" stroke="#06B6D4" stroke-width="2"/>
+  <line x1="132" y1="75" x2="115" y2="80" stroke="#F97316" stroke-width="2"/>
+  <line x1="78" y1="105" x2="88" y2="105" stroke="#10B981" stroke-width="2"/>
+  <line x1="122" y1="105" x2="112" y2="105" stroke="#7C3AED" stroke-width="2"/>
+  <line x1="83" y1="135" x2="90" y2="137" stroke="#06B6D4" stroke-width="2"/>
+  <line x1="117" y1="135" x2="110" y2="137" stroke="#F97316" stroke-width="2"/>
+
+  <!-- Small squares at connection ends -->
+  <rect x="63" y="73" width="4" height="4" fill="#0891B2"/>
+  <rect x="133" y="73" width="4" height="4" fill="#EA580C"/>
+  <rect x="73" y="103" width="4" height="4" fill="#059669"/>
+  <rect x="123" y="103" width="4" height="4" fill="#6D28D9"/>
+  <rect x="78" y="133" width="4" height="4" fill="#0891B2"/>
+  <rect x="118" y="133" width="4" height="4" fill="#EA580C"/>
+</svg>

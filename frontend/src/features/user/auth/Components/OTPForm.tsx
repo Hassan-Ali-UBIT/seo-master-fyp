@@ -23,6 +23,7 @@ const OTPForm: React.FC<OTPFormProps> = ({
   canResend = false,
   email = 'your email'
 }) => {
+  const submitLockRef = React.useRef(false);
   const {
     handleSubmit,
     formState: { errors },
@@ -44,9 +45,12 @@ const OTPForm: React.FC<OTPFormProps> = ({
   };
 
   const handleOTPComplete = (value: string) => {
-    // Auto-submit when OTP is complete
-    if (value.length === 6) {
-      handleSubmit(onSubmit)();
+    // Auto-submit when OTP is complete (prevent race conditions with lock)
+    if (value.length === 6 && !submitLockRef.current && !isLoading) {
+      submitLockRef.current = true;
+      handleSubmit(onSubmit)().finally(() => {
+        submitLockRef.current = false;
+      });
     }
   };
 
@@ -71,7 +75,15 @@ const OTPForm: React.FC<OTPFormProps> = ({
       </div>
 
       {/* OTP Form */}
-      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-6" onSubmit={(e) => {
+        e.preventDefault();
+        if (!submitLockRef.current && !isLoading) {
+          submitLockRef.current = true;
+          handleSubmit(onSubmit)().finally(() => {
+            submitLockRef.current = false;
+          });
+        }
+      }}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-4 text-center">
             Enter your one-time password

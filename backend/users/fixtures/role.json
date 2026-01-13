@@ -1,0 +1,20 @@
+[
+    {
+        "model": "users.role",
+        "pk": "1",
+        "fields": {
+            "name": "admin",
+            "created_at": "2025-04-12T12:52:22.065Z",
+            "updated_at": "2025-04-12T12:52:12.376Z"
+        }
+    },
+    {
+        "model": "users.role",
+        "pk": "2",
+        "fields": {
+            "name": "user",
+            "created_at": "2025-04-12T12:52:22.065Z",
+            "updated_at": "2025-04-12T12:52:22.065Z"
+        }
+    }
+]

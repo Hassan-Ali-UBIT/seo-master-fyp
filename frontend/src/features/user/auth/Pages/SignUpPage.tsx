@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SimpleHeader, Footer } from '@components/layout';
 import SignUpForm from '../Components/SignUpForm';
 import { type SignUpFormData } from '../schemas/signUpSchema';
+import { register as registerUser } from '@/services/api/authService';
 
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,14 +13,20 @@ const SignUpPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Sign up data:', data);
-      // Navigate to OTP page with email
+      await registerUser({
+        email: data.email,
+        password: data.password,
+        full_name: data.fullName,
+        username: data.username,
+        contact: data.contact || undefined,
+        hear_about_us: data.hearAboutUs,
+        referral_code: data.referralCode || undefined,
+      });
+      // After successful registration, navigate to OTP page
       navigate('/otp', { state: { email: data.email } });
     } catch (error) {
-      console.error('Sign up error:', error);
-      // TODO: Handle sign up error
+      const message = error?.message || 'An error occurred during sign up';
+      alert(message);
     } finally {
       setIsLoading(false);
     }
