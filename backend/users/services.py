@@ -210,7 +210,7 @@ class UserService:
             )
 
 class OTPService:
-    OTP_EXPIRY_MINUTES = 5
+    OTP_EXPIRY_MINUTES = 30
 
     @staticmethod
     def generate_otp():

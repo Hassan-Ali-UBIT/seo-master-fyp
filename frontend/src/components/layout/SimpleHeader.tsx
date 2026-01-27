@@ -6,6 +6,8 @@ interface SimpleHeaderProps {
   onSignIn?: () => void;
   onGetStarted?: () => void;
   onLogoClick?: () => void;
+  onDashboardClick?: () => void;
+  isAuthenticated?: boolean;
   signInLoading?: boolean;
   getStartedLoading?: boolean;
   className?: string;
@@ -15,6 +17,8 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
   onSignIn,
   onGetStarted,
   onLogoClick,
+  onDashboardClick,
+  isAuthenticated = false,
   signInLoading = false,
   getStartedLoading = false,
   className = ''
@@ -43,12 +47,21 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
 
           {/* Auth Buttons */}
           <div className="flex items-center">
-            <AuthButtonGroup
-              onSignIn={onSignIn}
-              onGetStarted={onGetStarted}
-              signInLoading={signInLoading}
-              getStartedLoading={getStartedLoading}
-            />
+            {isAuthenticated ? (
+              <button
+                onClick={onDashboardClick}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Go to Dashboard
+              </button>
+            ) : (
+              <AuthButtonGroup
+                onSignIn={onSignIn}
+                onGetStarted={onGetStarted}
+                signInLoading={signInLoading}
+                getStartedLoading={getStartedLoading}
+              />
+            )}
           </div>
         </div>
       </div>

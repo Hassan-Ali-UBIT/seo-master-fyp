@@ -21,4 +21,24 @@ export function getRefreshToken(): string | null {
 export function clearTokens() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem("smp_user_role");
+  localStorage.removeItem("smp_has_paid");
 }
+
+
+export function setUserRole(role: string) {
+  localStorage.setItem("smp_user_role", role);
+}
+
+export function getUserRole(): string | null {
+  return localStorage.getItem("smp_user_role");
+}
+
+export function setHasPaid(hasPaid: boolean) {
+  localStorage.setItem("smp_has_paid", String(hasPaid));
+}
+
+export function getHasPaid(): boolean {
+  return localStorage.getItem("smp_has_paid") === "true";
+}
+

@@ -1,89 +1,70 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@components/layout/DashboardLayout';
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  billingCycle: 'monthly' | 'yearly';
-  features: string[];
-  popular?: boolean;
-  disabled?: boolean;
-}
+import { clearTokens } from '@utils/tokenStorage';
+import { getPricePlans, createCheckoutSession } from '@/services/api/paymentService';
+import type { Plan } from '@/services/api/paymentService';
 
 const PlansPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
-  // TODO: Replace with actual data from API
-  const plans: Plan[] = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: 0,
-      billingCycle: 'monthly',
-      features: [
-        'LinkedIn profile view',
-        'Basic profile analysis',
-        '1 optimization per month',
-        'Community support',
-      ],
-    },
-    {
-      id: 'basic',
-      name: 'Basic',
-      price: billingCycle === 'monthly' ? 29 : 290,
-      billingCycle,
-      features: [
-        'Everything in Free',
-        'Advanced profile analysis',
-        '10 optimizations per month',
-        'Keyword suggestions',
-        'Email support',
-      ],
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      price: billingCycle === 'monthly' ? 79 : 790,
-      billingCycle,
-      popular: true,
-      features: [
-        'Everything in Basic',
-        'Unlimited optimizations',
-        'AI-powered content suggestions',
-        'Competitor analysis',
-        'Priority support',
-        'Export reports',
-      ],
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: billingCycle === 'monthly' ? 199 : 1990,
-      billingCycle,
-      features: [
-        'Everything in Premium',
-        'Team collaboration',
-        'Custom integrations',
-        'Dedicated account manager',
-        'Advanced analytics',
-        'White-label options',
-      ],
-    },
-  ];
+  useEffect(() => {
+    // Check for redirect message
+    if (location.state && location.state.message) {
+      alert(location.state.message); // Simple alert for now, replacing with toast is better
+      // Clear state to prevent showing on refresh
+      window.history.replaceState({}, document.title);
+    }
 
-  const handleSelectPlan = (planId: string) => {
-    // TODO: Implement payment flow with Stripe
-    console.log('Selected plan:', planId);
-    // For now, navigate to a mock payment page
-    navigate(`/user/payment/checkout?plan=${planId}&billing=${billingCycle}`);
+    const fetchPlans = async () => {
+      try {
+        const data = await getPricePlans();
+        const dataArray = Array.isArray(data) ? data : (data as any).results || [];
+        setPlans(dataArray);
+      } catch (error) {
+        console.error("Failed to fetch plans", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  const handleSelectPlan = async (plan: Plan) => {
+    try {
+      setProcessingId(plan.id);
+      const { url } = await createCheckoutSession(plan.id);
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Failed to start checkout", error);
+      alert("Failed to start checkout process. Please try again.");
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleLogout = () => {
+    clearTokens();
     navigate('/');
   };
+
+  const filteredPlans = plans.filter(p => p.billing_period === billingCycle || p.billing_type === 'one_time');
+
+  if (loading) {
+    return (
+      <DashboardLayout onLogout={handleLogout}>
+        <div className="flex justify-center items-center h-full">Loading plans...</div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout onLogout={handleLogout}>
@@ -98,21 +79,19 @@ const PlansPage: React.FC = () => {
           <div className="inline-flex items-center bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-md font-medium transition-all ${
-                billingCycle === 'monthly'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-6 py-2 rounded-md font-medium transition-all ${billingCycle === 'monthly'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-md font-medium transition-all ${
-                billingCycle === 'yearly'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-6 py-2 rounded-md font-medium transition-all ${billingCycle === 'yearly'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               Yearly
               <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
@@ -124,60 +103,58 @@ const PlansPage: React.FC = () => {
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan) => (
+          {filteredPlans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105 ${
-                plan.popular ? 'ring-2 ring-blue-600' : ''
-              }`}
+              className={`bg-white rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-105 flex flex-col`}
             >
-              {plan.popular && (
-                <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
-                  Most Popular
-                </div>
-              )}
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+              <div className="p-6 flex-grow">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.title}</h3>
+                <p className="text-sm text-gray-500 mb-4">{plan.sub_title}</p>
                 <div className="mb-4">
                   <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
-                  {plan.price > 0 && (
-                    <span className="text-gray-600">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                  {plan.billing_type === 'subscription' && (
+                    <span className="text-gray-600">/{plan.billing_period === 'monthly' ? 'mo' : 'yr'}</span>
+                  )}
+                  {plan.billing_type === 'one_time' && (
+                    <span className="text-gray-600"> one-time</span>
                   )}
                 </div>
                 <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span className="text-gray-700 text-sm">{feature}</span>
-                    </li>
-                  ))}
+                  <li className="flex items-start">
+                    <span className="text-gray-700 text-sm">{plan.credits} Credits</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-gray-700 text-sm">{plan.ai_words_limit} AI Words</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-gray-700 text-sm">{plan.keywords_limit} Keywords</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-gray-700 text-sm">{plan.pages_limit} Pages</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-gray-700 text-sm">{plan.max_users} Users</span>
+                  </li>
                 </ul>
+              </div>
+              <div className="p-6 pt-0 mt-auto">
                 <button
-                  onClick={() => handleSelectPlan(plan.id)}
-                  disabled={plan.disabled}
-                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                    plan.popular
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                  } ${plan.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => handleSelectPlan(plan)}
+                  disabled={processingId === plan.id}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors bg-blue-600 text-white hover:bg-blue-700 ${processingId === plan.id ? 'opacity-70 cursor-wait' : ''
+                    }`}
                 >
-                  {plan.price === 0 ? 'Get Started' : 'Subscribe Now'}
+                  {processingId === plan.id ? 'Processing...' : (plan.price === 0 ? 'Get Started' : 'Subscribe Now')}
                 </button>
               </div>
             </div>
           ))}
+          {filteredPlans.length === 0 && (
+            <div className="col-span-full text-center text-gray-500 py-10">
+              No plans available for this billing period.
+            </div>
+          )}
         </div>
 
         {/* FAQ or Additional Info */}

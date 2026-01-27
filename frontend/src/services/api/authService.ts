@@ -1,5 +1,5 @@
 import api from "./axios";
-import { setTokens } from "../../utils/tokenStorage";
+import { setTokens, setUserRole, setHasPaid } from "../../utils/tokenStorage";
 
 export interface LoginPayload {
   email: string;
@@ -20,7 +20,7 @@ export async function login(payload: LoginPayload) {
   const res = await api.post("users/login/", payload, { skipAuth: true });
   const data = res.data as {
     success?: boolean;
-    data?: { access?: string; refresh?: string; [key: string]: unknown };
+    data?: { access?: string; refresh?: string; profile?: { role?: string }; user?: { has_paid?: boolean }; [key: string]: unknown };
     [key: string]: unknown;
   };
   const access = data?.success && data?.data?.access;
@@ -28,6 +28,14 @@ export async function login(payload: LoginPayload) {
 
   if (access && refresh) {
     setTokens(access, refresh);
+    const role = data?.data?.profile?.role;
+    if (typeof role === 'string') {
+        setUserRole(role);
+    }
+    const hasPaid = data?.data?.user?.has_paid;
+    if (typeof hasPaid === 'boolean') {
+        setHasPaid(hasPaid);
+    }
   }
 
   console.log("Login response data:", data);

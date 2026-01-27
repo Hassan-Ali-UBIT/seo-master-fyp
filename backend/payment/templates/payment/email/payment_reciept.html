@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment Receipt - GenRapide</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f6f8fb;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #ffffff;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 3px solid #ff914d;
+        }
+        .header img {
+            width: 140px;
+        }
+        .content {
+            padding: 25px;
+            color: #333;
+            text-align: left;
+        }
+        .content h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .receipt-box {
+            background: #f9fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .receipt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+        .receipt-table th, .receipt-table td {
+            padding: 12px;
+            text-align: left;
+            font-size: 15px;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .receipt-table th {
+            width: 35%;
+            background: #f4f4f4;
+            color: #333;
+            font-weight: bold;
+        }
+        .receipt-table td {
+            width: 65%;
+            word-break: break-all;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff914d;
+        }
+        .cta-button {
+            display: block;
+            width: fit-content;
+            text-align: center;
+            background: #ff914d;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px auto 10px auto;
+        }
+        .cta-button:hover {
+            background: #e67e3c;
+        }
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            color: #666;
+            background-color: #f1f3f9;
+            border-radius: 0 0 10px 10px;
+        }
+        .footer a {
+            color: #ff914d;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
+            .content h2 {
+                font-size: 18px;
+            }
+            .receipt-table th, .receipt-table td {
+                font-size: 14px;
+                padding: 10px;
+                word-break: break-all;
+            }
+            .cta-button {
+                width: 80%;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img style="height: 80px; width: 80px; object-fit: contain;" src="https://ik.imagekit.io/dkpcv8kds/genrapide.jpg?updatedAt=1742912784373" alt="GenRapide Logo">
+        <h2 style="color: #e67e3c; font-family: sans-serif; font-size: 2rem;">GENRAPIDE</h2>
+        <h2>Payment Receipt</h2>
+    </div>
+
+    <div class="content">
+        <h2>Thank You for Your Payment!</h2>
+        <p>Hello <strong>{{ name }}</strong>,</p>
+        <p>Your payment has been successfully processed. Below are your transaction details:</p>
+
+        <div class="receipt-box">
+            <table class="receipt-table">
+                <tr>
+                    <th>Transaction ID:</th>
+                    <td><strong>{{ transaction_id }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Payment Date:</th>
+                    <td>{{ payment_date }}</td>
+                </tr>
+                <tr>
+                    <th>Plan:</th>
+                    <td>{{ plan_name }}</td>
+                </tr>
+                <tr>
+                    <th>Amount Paid:</th>
+                    <td class="total">${{ plan_amount }}</td>
+                </tr>
+                <tr>
+                    <th>Billing Cycle:</th>
+                    <td>{{ plan_cycle }}</td>
+                </tr>
+            </table>
+        </div>
+
+
+        <p style="text-align: center; margin-top: 20px;">Need help? Our team is here for you.</p>
+
+        <p style="text-align: center;"><strong>📩 Contact Support:</strong> <a href="mailto:support@bnr360.com">support@bnr360.com</a></p>
+    </div>
+
+    <div class="footer">
+        &copy; 2025 GenRapide | <a style="color: #000000;" href="https://www.bnr360.com">www.bnr360.com</a><br>
+        343 Preston Street, Ottawa, Canada
+    </div>
+</div>
+
+</body>
+</html>

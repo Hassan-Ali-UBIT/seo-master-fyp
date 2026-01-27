@@ -2,6 +2,7 @@
 LinkedIn Optimizer Services
 Business logic for competitor discovery, keyword extraction, profile analysis, and optimization.
 """
+from users.models import User
 import re
 import json
 import requests
@@ -10,6 +11,12 @@ from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
+import traceback
+import json
+import asyncio
+from asgiref.sync import async_to_sync
+from playwright.async_api import async_playwright
+from linkedin_scraper import PersonScraper, login_with_credentials
 from tavily import TavilyClient
 
 from common.qwen_utils import call_qwen
@@ -66,48 +73,189 @@ class LinkedInOAuthService:
             )
 
     @staticmethod
-    def fetch_profile_data(access_token: str) -> Dict:
+    def _scrape_profile_async(profile_url: str):
+        """Internal async method to run linkedin-scraper"""
+        if not settings.LINKEDIN_BOT_USERNAME or not settings.LINKEDIN_BOT_PASSWORD:
+             raise CustomAPIException(
+                message="LinkedIn Bot credentials not configured",
+                status_code=500
+            )
+
+        print(f"Using linkedin-scraper (Playwright) to fetch: {profile_url}")
+
+        async def run():
+            async with async_playwright() as p:
+                # Launch browser
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+
+                try:
+                    # Login
+                    await login_with_credentials(
+                        page,
+                        email=settings.LINKEDIN_BOT_USERNAME,
+                        password=settings.LINKEDIN_BOT_PASSWORD
+                    )
+
+                    # Scrape
+                    scraper = PersonScraper(page)
+                    person = await scraper.scrape(profile_url)
+
+                    return person
+                finally:
+                    await browser.close()
+
+        return asyncio.run(run())
+
+    @staticmethod
+    def fetch_profile_from_url(user, profile_url: str) -> Dict:
         """
-        Fetch user's LinkedIn profile data
-        Since LinkedIn app is in test mode, only basic info (name, email) is available.
-        Use Tavily to search and extract complete profile details.
+        Fetch profile data directly from a LinkedIn URL using linkedin-scraper package
         """
-        headers = {
-            'Authorization': f'Bearer {access_token}',
-            'X-Restli-Protocol-Version': '2.0.0'
-        }
+        print(f"Fetching profile from URL: {profile_url}")
 
         try:
-            # Fetch basic profile (name and email only in test mode)
-            profile_url = f"{LinkedInOAuthService.API_BASE_URL}/me"
-            profile_response = requests.get(profile_url, headers=headers, timeout=30)
-            profile_response.raise_for_status()
-            profile_data = profile_response.json()
+            # Run the scraper (it handles browser login and scraping)
+            # The _scrape_profile_async method uses asyncio.run internally
+            person = LinkedInOAuthService._scrape_profile_async(profile_url)
 
-            # Get email (requires email scope)
-            email_url = f"{LinkedInOAuthService.API_BASE_URL}/emailAddress?q=members&projection=(elements*(handle~))"
-            email_response = requests.get(email_url, headers=headers, timeout=30)
-            email_data = {}
-            if email_response.status_code == 200:
-                email_data = email_response.json()
+            if not person:
+                 raise CustomAPIException(
+                    message="Failed to scrape profile",
+                    status_code=500
+                )
 
-            # Extract basic info
-            first_name = profile_data.get('localizedFirstName', '')
-            last_name = profile_data.get('localizedLastName', '')
-            full_name = f"{first_name} {last_name}".strip()
+            print("person", person)
 
-            # Extract email if available
-            email = ''
-            if email_data.get('elements'):
-                email = email_data['elements'][0].get('handle~', {}).get('emailAddress', '')
+            # Map linkedin-scraper Person object to our format
+
+            # 1. Full Name
+            full_name = getattr(person, 'name', '') or ''
+
+            # 2. Headline (Construct since field is missing in v3 model)
+            # Use most recent job title and company
+            job_title = getattr(person, 'job_title', '') or ''
+            company = getattr(person, 'company', '') or ''
+            if job_title and company:
+                headline = f"{job_title} at {company}"
+            elif job_title:
+                headline = job_title
+            else:
+                headline = getattr(person, 'headline', '') # Try attribute just in case
+
+            # 3. About
+            about = getattr(person, 'about', '') or ''
+
+            # 4. Experience & Skills Extraction
+            experience_text = ""
+            extracted_skills = set()
+
+            experiences = getattr(person, 'experiences', [])
+            for exp in experiences:
+                t = getattr(exp, 'position_title', '') or ''
+                c = getattr(exp, 'institution_name', '') or ''
+                d = getattr(exp, 'description', '') or ''
+
+                # Format: "Software Engineer at Google"
+                # Description...
+                entry_header = f"{t} at {c}" if c else t
+                experience_text += f"{entry_header}\n{d}\n\n"
+
+                # Try to extract skills from description "Skills: HTML, CSS"
+                if d and "Skills:" in d:
+                    # Simple extraction logic: look for lines starting with "Skills:"
+                    for line in d.split('\n'):
+                        if "Skills:" in line:
+                            skills_str = line.replace("Skills:", "").strip()
+                            # Split by comma or bullet
+                            for s in skills_str.split(','): # Assuming comma separated
+                                if s.strip():
+                                    extracted_skills.add(s.strip())
+
+            # 5. Skills
+            # Combine extracted skills with any direct skills (if library adds them back)
+            direct_skills = getattr(person, 'skills', []) or []
+            if direct_skills:
+                extracted_skills.update(direct_skills)
+
+            skills_text = ", ".join(list(extracted_skills))
+
+            return {
+                'profile': {},
+                'full_name': full_name,
+                'email': getattr(person, 'email', '') or '',
+                'linkedin_id': '',
+                'picture': getattr(person, 'image_url', '') or '', # image_url might be valid
+                'headline': headline,
+                'about': about,
+                'experience': experience_text.strip(),
+                'skills': skills_text,
+                'profile_url': profile_url,
+            }
+
+        except Exception as e:
+            print(f"Scraper error: {str(e)}")
+            traceback.print_exc()
+            raise CustomAPIException(
+                message=f"Failed to fetch profile data: {str(e)}",
+                status_code=500
+            )
+
+    @staticmethod
+    def fetch_profile_data(access_token: str) -> Dict:
+        """
+        Fetch user's LinkedIn profile data using OpenID Connect userinfo endpoint.
+        This endpoint is available in test mode with 'openid profile email' scopes.
+        Reference: https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2
+        """
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+
+        full_name = ''
+        email = ''
+        profile_data = {}
+
+        try:
+            # Use OpenID Connect userinfo endpoint (works in test mode)
+            userinfo_url = f"{LinkedInOAuthService.API_BASE_URL}/userinfo"
+
+            userinfo_response = requests.get(userinfo_url, headers=headers, timeout=30)
+            userinfo_response.raise_for_status()
+            profile_data = userinfo_response.json()
+            print("LinkedIn userinfo response:", profile_data)
+
+            # Extract data from userinfo response
+            # Available fields: sub, name, given_name, family_name, picture, locale, email, email_verified
+            full_name = profile_data.get('name', '')
+            if not full_name:
+                given_name = profile_data.get('given_name', '')
+                family_name = profile_data.get('family_name', '')
+                full_name = f"{given_name} {family_name}".strip()
+
+            email = profile_data.get('email', '')
+
+            # The 'sub' field contains LinkedIn member ID
+            linkedin_id = profile_data.get('sub', '')
 
             # Use Tavily to search for complete LinkedIn profile details
-            complete_profile = LinkedInOAuthService._fetch_profile_with_tavily(full_name, email)
+            # This provides headline, about, experience, skills
+            print("Fetching complete profile via Tavily...")
+            print("LinkedIn ID (sub):", linkedin_id)
+            print("Full Name:", full_name)
+            print("Email:", email)
+            complete_profile = LinkedInOAuthService._fetch_profile_with_tavily(
+                full_name=full_name,
+                email=email,
+                linkedin_id=linkedin_id
+            )
 
             return {
                 'profile': profile_data,
                 'full_name': full_name,
                 'email': email,
+                'linkedin_id': linkedin_id,
+                'picture': profile_data.get('picture', ''),
                 'headline': complete_profile.get('headline', ''),
                 'about': complete_profile.get('about', ''),
                 'experience': complete_profile.get('experience', ''),
@@ -121,9 +269,10 @@ class LinkedInOAuthService:
             )
 
     @staticmethod
-    def _fetch_profile_with_tavily(full_name: str, email: str = '') -> Dict:
+    def _fetch_profile_with_tavily(full_name: str, email: str = '', linkedin_id: str = '', profile_url: str = 'https://www.linkedin.com/in/hassan-ali-078864392/') -> Dict:
         """
         Use Tavily to search for and extract complete LinkedIn profile details
+        Use LinkedIn ID (sub) and email for precise matching, or a direct profile URL
         """
         if not settings.TAVILY_API_KEY:
             return {}
@@ -131,23 +280,35 @@ class LinkedInOAuthService:
         try:
             tavily_client = TavilyClient(api_key=settings.TAVILY_API_KEY)
 
-            # Build search query with name and optionally email
-            search_terms = [full_name, 'LinkedIn profile']
-            if email:
-                # Try to extract company domain from email
-                email_domain = email.split('@')[-1] if '@' in email else ''
-                if email_domain and email_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com']:
-                    search_terms.append(email_domain.split('.')[0])
+            # Build search query - use most specific identifiers available
+            if profile_url:
+                # Direct URL search - most accurate
+                query = profile_url
+                print(f"Using direct URL for Tavily search: {query}")
+            # LinkedIn ID (sub field) is most unique, then email + name combination
+            elif email and linkedin_id:
+                # Combine email and name for best accuracy
+                query = f'site:linkedin.com/in "{email}" "{linkedin_id}"'
+            elif email:
+                # Email only
+                query = f'site:linkedin.com/in "{email}"'
+            else:
+                # Fall back to name search if no email
+                query = f'site:linkedin.com/in "{full_name}"'
 
-            query = ' '.join(search_terms)
+            print(f"Tavily search query: {query}")
 
             # Search for the user's LinkedIn profile
             response = tavily_client.search(
-                query=f'site:linkedin.com/in {query}',
+                query=query,
                 max_results=5,
                 search_depth="advanced",
                 include_raw_content=True
             )
+
+            selected = {}
+
+            print("Response: ", response)
 
             # Process first relevant result
             for result in response.get('results', []):
@@ -166,8 +327,10 @@ class LinkedInOAuthService:
                     url
                 )
 
+                print("Profile Details: ", profile_details)
+
                 if profile_details.get('headline'):  # Valid profile found
-                    return profile_details
+                    selected = profile_details
 
             return {}
 
@@ -189,6 +352,10 @@ Extract LinkedIn profile information from the following content. Return a JSON o
 - headline: The professional headline (1 line)
 - about: The about/summary section
 - experience: Work experience section with bullet points
+- headline: The professional headline (1 line)
+- full_name: The user's full name (if available)
+- about: The about/summary section
+- experience: Work experience section with bullet points
 - skills: Comma-separated list of skills
 
 Content:
@@ -198,7 +365,7 @@ Return only valid JSON without any markdown formatting or code blocks.
 """
 
         try:
-            response = call_qwen(prompt, temperature=0.3)
+            response = call_qwen(prompt)
 
             # Parse JSON response
             # Remove markdown code blocks if present
@@ -218,6 +385,7 @@ Return only valid JSON without any markdown formatting or code blocks.
             # Fallback: Basic text extraction
             return {
                 'headline': '',
+                'full_name': '',
                 'about': '',
                 'experience': '',
                 'skills': '',
@@ -589,7 +757,8 @@ Key requirements:
 
 Return ONLY the optimized headline text, nothing else."""
 
-        return call_qwen(prompt, model="qwen3:32b").strip()
+        result = call_qwen(prompt, model="qwen3:32b").strip()
+        return result
 
     @staticmethod
     def generate_about(
@@ -614,13 +783,15 @@ Key requirements:
 
 Return ONLY the optimized about section text, nothing else."""
 
-        return call_qwen(prompt, model="qwen3:32b").strip()
+        result = call_qwen(prompt, model="qwen3:32b").strip()
+        return result
 
     @staticmethod
     def generate_experience_recommendations(
         profile_snapshot: UserProfileSnapshot,
         optimization_context: OptimizationContext,
-        keywords: List[KeywordCluster]
+        keywords: List[KeywordCluster],
+        user: User
     ) -> List[Dict]:
         """Generate experience bullet recommendations"""
         action_verbs = [k.keyword for k in keywords if k.category == 'action_verb'][:10]
@@ -649,6 +820,13 @@ Do not include any other text or formatting."""
                 cleaned_response = re.sub(r'^```json?\s*|\s*```$', '', cleaned_response, flags=re.MULTILINE)
 
             bullets = json.loads(cleaned_response)
+
+            # Consume AI words
+            if user and hasattr(user, 'userresources'):
+                 # Count words in all bullets
+                 word_count = sum(len(str(b).split()) for b in bullets)
+                 user.userresources.consume_ai_words(word_count)
+
             return [{'bullet': b, 'type': 'recommendation'} for b in bullets]
         except json.JSONDecodeError:
             # Fallback: return generic recommendations
@@ -723,26 +901,34 @@ class SEOScoringService:
         }
         """
         # 1. Keyword Relevance Score (0-100)
-        keyword_relevance = analysis_data.get('keyword_match_percentage', 0)
+        keyword_relevance = min(analysis_data.get('keyword_match_percentage', 0), 100)
 
         # 2. Profile Completeness Score (0-100)
         completeness = analysis_data.get('completeness', {})
         completeness_count = sum([1 for v in completeness.values() if v])
-        profile_completeness = (completeness_count / max(len(completeness), 1)) * 100
+        profile_completeness = min((completeness_count / max(len(completeness), 1)) * 100, 100)
 
         # 3. Skill Match Score (0-100)
+        # Fix: Only count important matched skills to match the denominator
         matched_skills = len([
             k for k in analysis_data.get('matched_keywords', [])
-            if k['category'] == 'skill'
+            if k['category'] == 'skill' and k.get('importance', 0) >= 5.0
         ])
         total_important_skills = len([
             k for k in keywords
             if k.category == 'skill' and k.importance_score >= 5.0
         ])
-        skill_match = (matched_skills / max(total_important_skills, 1)) * 100
+
+        if total_important_skills > 0:
+            skill_match = (matched_skills / total_important_skills) * 100
+        else:
+            # If no important skills found in competitors, fallback or give full score if some skills present
+            skill_match = 100 if matched_skills > 0 else 0
+
+        skill_match = min(skill_match, 100)
 
         # 4. Structural Quality Score (0-100)
-        structural_quality = SEOScoringService._calculate_structural_quality(profile_snapshot)
+        structural_quality = min(SEOScoringService._calculate_structural_quality(profile_snapshot), 100)
 
         # Calculate weighted SEO score
         seo_score = (
@@ -751,6 +937,15 @@ class SEOScoringService:
             skill_match * SEOScoringService.WEIGHTS['skill_match'] +
             structural_quality * SEOScoringService.WEIGHTS['structural_quality']
         )
+
+        # Final cap to ensure it never exceeds 100
+        seo_score = min(seo_score, 100.0)
+
+        print(f"DEBUG: Keyword Relevance: {keyword_relevance}")
+        print(f"DEBUG: Profile Completeness: {profile_completeness}")
+        print(f"DEBUG: Skill Match: {skill_match}")
+        print(f"DEBUG: Structural Quality: {structural_quality}")
+        print(f"DEBUG: Total SEO Score: {seo_score}")
 
         return {
             'keyword_relevance_score': round(keyword_relevance, 2),

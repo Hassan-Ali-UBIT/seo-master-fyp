@@ -13,7 +13,7 @@ from common.serializer_utils import get_serialized_or_none
 
 
 from .models import (
-    User, UserProfile, OTP, Role,
+    User, UserProfile, OTP, Role, UserResources
 )
 from .services import (
     LoginService, RoleService, UserService, OTPService,
@@ -71,6 +71,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['user'] = {}
         data['user']['id'] = self.user.id
         data['user']['email'] = self.user.email
+        data['user']['has_paid'] = self.user.has_paid
 
         if hasattr(self.user, 'userprofile'):
             data['profile'] = {}
@@ -209,3 +210,33 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
 
+class UserResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserResources
+        fields = '__all__'
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer for admin user management"""
+    subscription = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    last_active = serializers.SerializerMethodField()
+    joined_date = serializers.DateTimeField(source='created_at', format="%Y-%m-%d")
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'subscription',
+            'status', 'joined_date', 'last_active'
+        ]
+
+    def get_subscription(self, obj):
+        resource = obj.userresources_set.order_by('-created_at').first()
+        if resource and resource.plan:
+            return resource.plan.title
+        return "Free"
+
+    def get_status(self, obj):
+        return "active" if obj.is_active else "inactive"
+
+    def get_last_active(self, obj):
+        return obj.last_login.strftime("%Y-%m-%d") if obj.last_login else "Never"

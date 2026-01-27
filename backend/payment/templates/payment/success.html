@@ -1,0 +1,53 @@
+
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Customer Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <!-- templates/checkout/success.html -->
+    <h1>{{ message }}</h1>
+    <p>Your payment was successful. Thank you for your purchase!</p>
+    <h1>Manage Your Subscription</h1>
+    <button id="portal-btn">Go to Customer Portal</button>
+
+    <script>
+        document.getElementById("portal-btn").addEventListener("click", function() {
+            fetch("/payment/customer-portal/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),  // Include CSRF token for security
+                    "Authorization":"Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ5OTg1NDU3LCJpYXQiOjE3NDk1NTM0NTcsImp0aSI6IjA0NGNhZDI4M2M5MTQ4MzJhNjVlMWFhYTQxNzMwOTMwIiwidXNlcl9pZCI6MX0.OFNgbm4DeSHnseIUbgG82JW1vqEgZOHA_kSnyqgcE3s"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    window.location.href = data.url;  // Redirect to Stripe portal
+                } else {
+                    alert("Error: " + data.error);
+                }
+            });
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

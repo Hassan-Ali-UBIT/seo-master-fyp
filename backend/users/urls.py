@@ -6,7 +6,8 @@ from rest_framework_simplejwt.views import (
 from .views import (
     RegisterView, LoginView, GenerateOTPView, VerifyOTPView,
     ChangePasswordView, GetUpdateUserView,
-    ResetPasswordView, CustomTokenObtainPairView, GoogleLoginView
+    ResetPasswordView, CustomTokenObtainPairView, GoogleLoginView,
+    UserResourceView
 )
 
 urlpatterns = [
@@ -20,5 +21,6 @@ urlpatterns = [
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('me/', GetUpdateUserView.as_view(), name='get-update-user'),
+    path('me/user-resource/', UserResourceView.as_view(), name='user-resource'),
 ]
 

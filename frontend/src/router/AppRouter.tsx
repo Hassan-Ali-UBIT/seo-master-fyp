@@ -13,6 +13,9 @@ import PlansPage from '@features/user/payment/Pages/PlansPage';
 import PaymentSuccessPage from '@features/user/payment/Pages/PaymentSuccessPage';
 import PaymentFailurePage from '@features/user/payment/Pages/PaymentFailurePage';
 import LinkedInToolPage from '@features/user/linkedInTool/Pages/LinkedInToolPage';
+import LinkedInHistoryPage from '@features/user/linkedInTool/Pages/LinkedInHistoryPage';
+import LinkedInPostGeneratorPage from '@features/user/linkedInTool/Pages/LinkedInPostGeneratorPage';
+import LinkedInSavedPostsPage from '@features/user/linkedInTool/Pages/LinkedInSavedPostsPage';
 import AdminDashboard from '@features/admin/dashboard/Pages/AdminDashboard';
 import AdminPlansPage from '@features/admin/planManagement/Pages/AdminPlansPage';
 import AdminUsersPage from '@features/admin/userManagement/Pages/AdminUsersPage';
@@ -20,6 +23,7 @@ import AdminPaymentPage from '@features/admin/paymentManagement/Pages/AdminPayme
 import DevDemo from '@components/layout/DevDemo';
 import ProtectedRoute from './ProtectedRoute';
 import RoleBasedRoute from './RoleBasedRoute';
+import PaymentProtectedRoute from './PaymentProtectedRoute';
 
 const AppRouter: React.FC = () => {
   return (
@@ -39,7 +43,7 @@ const AppRouter: React.FC = () => {
           path="/user/dashboard"
           element={
             // <ProtectedRoute requiredRole="user">
-              <UserDashboard />
+            <UserDashboard />
             // </ProtectedRoute>
           }
         />
@@ -48,7 +52,7 @@ const AppRouter: React.FC = () => {
           path="/user/profile"
           element={
             // <ProtectedRoute requiredRole="user">
-              <ProfilePage />
+            <ProfilePage />
             // </ProtectedRoute>
           }
         />
@@ -57,7 +61,7 @@ const AppRouter: React.FC = () => {
           path="/user/plans"
           element={
             // <ProtectedRoute requiredRole="user">
-              <PlansPage />
+            <PlansPage />
             // </ProtectedRoute>
           }
         />
@@ -66,7 +70,7 @@ const AppRouter: React.FC = () => {
           path="/user/payment/success"
           element={
             // <ProtectedRoute requiredRole="user">
-              <PaymentSuccessPage />
+            <PaymentSuccessPage />
             // </ProtectedRoute>
           }
         />
@@ -75,7 +79,7 @@ const AppRouter: React.FC = () => {
           path="/user/payment/failure"
           element={
             // <ProtectedRoute requiredRole="user">
-              <PaymentFailurePage />
+            <PaymentFailurePage />
             // </ProtectedRoute>
           }
         />
@@ -83,9 +87,36 @@ const AppRouter: React.FC = () => {
         <Route
           path="/user/linkedin-tool"
           element={
-            // <ProtectedRoute requiredRole="user">
+            <PaymentProtectedRoute>
               <LinkedInToolPage />
-            // </ProtectedRoute>
+            </PaymentProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/linkedin-tool/history"
+          element={
+            <PaymentProtectedRoute>
+              <LinkedInHistoryPage />
+            </PaymentProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/linkedin-tool/posts"
+          element={
+            <PaymentProtectedRoute>
+              <LinkedInPostGeneratorPage />
+            </PaymentProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/linkedin-tool/posts/saved"
+          element={
+            <PaymentProtectedRoute>
+              <LinkedInSavedPostsPage />
+            </PaymentProtectedRoute>
           }
         />
 
@@ -93,7 +124,7 @@ const AppRouter: React.FC = () => {
           path="/admin/dashboard"
           element={
             // <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
+            <AdminDashboard />
             // </ProtectedRoute>
           }
         />
@@ -102,7 +133,7 @@ const AppRouter: React.FC = () => {
           path="/admin/plans"
           element={
             // <ProtectedRoute requiredRole="admin">
-              <AdminPlansPage />
+            <AdminPlansPage />
             // </ProtectedRoute>
           }
         />
@@ -111,7 +142,7 @@ const AppRouter: React.FC = () => {
           path="/admin/users"
           element={
             // <ProtectedRoute requiredRole="admin">
-              <AdminUsersPage />
+            <AdminUsersPage />
             // </ProtectedRoute>
           }
         />
@@ -120,7 +151,7 @@ const AppRouter: React.FC = () => {
           path="/admin/payments"
           element={
             // <ProtectedRoute requiredRole="admin">
-              <AdminPaymentPage />
+            <AdminPaymentPage />
             // </ProtectedRoute>
           }
         />
@@ -130,7 +161,7 @@ const AppRouter: React.FC = () => {
           path="/dashboard"
           element={
             // <RoleBasedRoute allowedRoles={['user', 'admin']}>
-              <UserDashboard />
+            <UserDashboard />
             // </RoleBasedRoute>
           }
         />

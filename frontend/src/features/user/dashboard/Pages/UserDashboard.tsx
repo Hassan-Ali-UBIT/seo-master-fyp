@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@components/layout/DashboardLayout';
 import SEOToolsGrid from '@components/dashboard/SEOToolsGrid';
 
+import { clearTokens } from '@utils/tokenStorage';
+
 const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // TODO: Implement logout logic (clear auth state, redirect, etc.)
-    console.log('Logging out...');
-    // For now, just redirect to home
+    clearTokens();
     navigate('/');
   };
 

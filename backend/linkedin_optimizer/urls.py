@@ -12,14 +12,19 @@ from .views import (
     ProfileHistoryView,
     OptimizationDetailView,
     UserProfileSnapshotsView,
-    DeleteProfileSnapshotView
+    DeleteProfileSnapshotView,
+    ProfileFetchUrlView,
+    LinkedInPostViewSet,
+    GeneratePostView
 )
+from rest_framework.routers import DefaultRouter
 
 app_name = 'linkedin_optimizer'
 
 urlpatterns = [
     # Profile input
     path('profile/input/', ProfileInputView.as_view(), name='profile-input'),
+    path('profile/fetch-url/', ProfileFetchUrlView.as_view(), name='profile-fetch-url'),
     path('profiles/', UserProfileSnapshotsView.as_view(), name='profile-list'),
     path('profile/<int:profile_id>/', DeleteProfileSnapshotView.as_view(), name='profile-delete'),
 
@@ -35,4 +40,12 @@ urlpatterns = [
 
     # History
     path('history/', ProfileHistoryView.as_view(), name='profile-history'),
+
+    # LinkedIn Post Generation
+    path('posts/generate/', GeneratePostView.as_view(), name='post-generate'),
+
 ]
+
+router = DefaultRouter()
+router.register(r'posts', LinkedInPostViewSet, basename='linkedin-posts')
+urlpatterns += router.urls

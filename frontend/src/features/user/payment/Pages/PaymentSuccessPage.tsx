@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@components/layout/DashboardLayout';
+import { clearTokens } from '@utils/tokenStorage';
 
 const PaymentSuccessPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,9 @@ const PaymentSuccessPage: React.FC = () => {
     console.log('Payment session ID:', sessionId);
   }, [sessionId]);
 
+
   const handleLogout = () => {
+    clearTokens();
     navigate('/');
   };
 

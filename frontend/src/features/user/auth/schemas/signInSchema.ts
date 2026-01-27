@@ -7,7 +7,7 @@ export const signInSchema = z.object({
 
   password: z
     .string()
-    .min(6, 'Password must be at least 6 characters')
+    .min(4, 'Password must be at least 4 characters')
     .max(100, 'Password must be less than 100 characters'),
 
   rememberMe: z

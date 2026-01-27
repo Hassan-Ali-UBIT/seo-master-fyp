@@ -187,6 +187,8 @@ def generate_optimizations_task(self, previous_result: dict):
         # Get keywords
         keywords = list(KeywordCluster.objects.filter(optimization_context=context))
 
+        # Get user for resource consumption
+
         # Generate headline
         optimized_headline = OptimizationGenerationService.generate_headline(
             profile_snapshot=profile_snapshot,
@@ -211,7 +213,8 @@ def generate_optimizations_task(self, previous_result: dict):
         optimized_experience = OptimizationGenerationService.generate_experience_recommendations(
             profile_snapshot=profile_snapshot,
             optimization_context=context,
-            keywords=keywords
+            keywords=keywords,
+            user=job.user
         )
 
         # Generate skill recommendations
@@ -224,6 +227,20 @@ def generate_optimizations_task(self, previous_result: dict):
         job.progress_percentage = 80
         job.current_step = 'Content generation complete'
         job.save()
+
+        user = job.user
+        # Calculate total words (split by whitespace for estimation)
+        headline_words = len(optimized_headline.split()) if optimized_headline else 0
+        about_words = len(optimized_about.split()) if optimized_about else 0
+        experience_words = sum(len(str(item.get('bullet', '')).split()) for item in optimized_experience)
+
+        total_word_count = headline_words + about_words + experience_words
+
+        # Fetch latest user resources (ForeignKey)
+        user_resources = user.userresources_set.order_by('-created_at').first()
+
+        if user_resources:
+            user_resources.consume_ai_words(total_word_count)
 
         return {
             'job_id': job_id,

@@ -15,7 +15,12 @@ const SignInPage: React.FC = () => {
     try {
       const response = await login({ email: data.email, password: data.password });
       if (response?.success) {
-        navigate('/user/dashboard');
+        const role = response?.data?.profile?.role;
+        if (role === 'admin' || role === 'super_admin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/user/dashboard');
+        }
 
       } else {
         throw new Error('Login failed');
@@ -44,7 +49,7 @@ const SignInPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <SimpleHeader
-        onSignIn={() => {}}
+        onSignIn={() => { }}
         onGetStarted={handleSignUp}
         onLogoClick={handleLogoClick}
       />

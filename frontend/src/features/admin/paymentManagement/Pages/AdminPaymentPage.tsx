@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SimpleHeader, Footer } from '@components/layout';
+import DashboardLayout from '@components/layout/DashboardLayout';
+
+import { getAdminPayments, type AdminPayment } from '@/services/api/adminService';
 
 interface Payment {
   id: string;
-  userId: string;
+  userId: string; // Not directly available in AdminPayment listing sometimes, but we have user_name
   userName: string;
   userEmail: string;
   plan: string;
@@ -22,74 +24,35 @@ const AdminPaymentPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'success' | 'failed' | 'pending' | 'refunded'>('all');
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all');
 
-  // TODO: Replace with actual data from API
-  const [payments, setPayments] = useState<Payment[]>([
-    {
-      id: '1',
-      userId: '101',
-      userName: 'John Doe',
-      userEmail: 'john@example.com',
-      plan: 'Premium',
-      amount: 79,
-      currency: 'USD',
-      status: 'success',
-      paymentMethod: 'Stripe',
-      transactionId: 'txn_1234567890abcdef',
-      date: '2024-12-27T10:30:00',
-    },
-    {
-      id: '2',
-      userId: '102',
-      userName: 'Jane Smith',
-      userEmail: 'jane@example.com',
-      plan: 'Basic',
-      amount: 29,
-      currency: 'USD',
-      status: 'success',
-      paymentMethod: 'Stripe',
-      transactionId: 'txn_abcdef1234567890',
-      date: '2024-12-26T15:45:00',
-    },
-    {
-      id: '3',
-      userId: '103',
-      userName: 'Bob Wilson',
-      userEmail: 'bob@example.com',
-      plan: 'Enterprise',
-      amount: 199,
-      currency: 'USD',
-      status: 'failed',
-      paymentMethod: 'Stripe',
-      transactionId: 'txn_0987654321fedcba',
-      date: '2024-12-25T09:15:00',
-    },
-    {
-      id: '4',
-      userId: '104',
-      userName: 'Alice Johnson',
-      userEmail: 'alice@example.com',
-      plan: 'Premium',
-      amount: 79,
-      currency: 'USD',
-      status: 'success',
-      paymentMethod: 'Stripe',
-      transactionId: 'txn_fedcba0987654321',
-      date: '2024-12-24T14:20:00',
-    },
-    {
-      id: '5',
-      userId: '105',
-      userName: 'Charlie Brown',
-      userEmail: 'charlie@example.com',
-      plan: 'Basic',
-      amount: 29,
-      currency: 'USD',
-      status: 'pending',
-      paymentMethod: 'Stripe',
-      transactionId: 'txn_1122334455667788',
-      date: '2024-12-27T11:00:00',
-    },
-  ]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getAdminPayments();
+        const mappedPayments: Payment[] = data.map(p => ({
+          id: p.id.toString(),
+          userId: 'N/A', // not needed for display
+          userName: p.user_name || 'Unknown',
+          userEmail: p.user_email,
+          plan: p.plan_name,
+          amount: parseFloat(p.amount),
+          currency: p.currency,
+          status: p.status === 'completed' ? 'success' : p.status as any, // Map 'completed' to 'success'
+          paymentMethod: p.mode === 'subscription' ? 'Subscription' : 'One-time',
+          transactionId: p.transaction_id || 'N/A',
+          date: p.created_at
+        }));
+        setPayments(mappedPayments);
+      } catch (error) {
+        console.error("Failed to fetch payments", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
@@ -161,10 +124,8 @@ const AdminPaymentPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <SimpleHeader />
-
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
           <p className="text-gray-600 mt-2">View and manage all payment transactions</p>
@@ -410,10 +371,8 @@ const AdminPaymentPage: React.FC = () => {
             Export to CSV
           </button>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

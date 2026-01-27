@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stripe Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <h1>Stripe Checkout</h1>
+
+    <!-- Plan Selection -->
+    <ul>
+      {% for plan in all_plans %}
+        <li>
+          <strong>{{ plan.title }}</strong> - ${{ plan.price }} per {{ plan.billing_period|capfirst }}
+          <br />
+          <span>Billing Type: {{ plan.billing_type|capfirst }}</span>
+          <br />
+          <span>Plan ID: {{ plan.id }}</span>
+        </li>
+      {% empty %}
+        <li>No plans available.</li>
+      {% endfor %}
+    </ul>
+
+    <form id="checkout-form">
+      {% csrf_token %}
+
+      <!-- Plan ID Input -->
+      <label for="plan-id">Enter Plan ID:</label>
+      <input type="text" id="plan-id" placeholder="Enter Plan ID" required />
+
+      <button type="button" id="checkout-button">
+        Checkout
+      </button>
+    </form>
+
+    <script>
+      const stripe = Stripe("{{ stripe_public_key }}");
+
+      document
+        .getElementById("checkout-button")
+        .addEventListener("click", function () {
+          const planId = document.getElementById("plan-id").value;
+
+          // Validate inputs
+          if (!planId) {
+            alert("Please provide a valid Plan ID.");
+            return;
+          }
+
+          // AJAX Request to Start Checkout Session
+          fetch(`/payment/create-checkout-session/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}",
+              "Authorization": "Token {{ authorization_token }}"
+            },
+            body: JSON.stringify({
+              plan_id: planId, // Added Payment Mode
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => stripe.redirectToCheckout({ sessionId: data.id }))
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred while processing your request.");
+            });
+        });
+    </script>
+  </body>
+</html>

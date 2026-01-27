@@ -47,6 +47,8 @@ INSTALLED_APPS = [
 
     'users',
     'linkedin_optimizer',
+    'payment',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -301,4 +303,13 @@ TAVILY_API_KEY = config('TAVILY_API_KEY', default='')
 LINKEDIN_CLIENT_ID = config('LINKEDIN_CLIENT_ID', default='')
 LINKEDIN_CLIENT_SECRET = config('LINKEDIN_CLIENT_SECRET', default='')
 LINKEDIN_REDIRECT_URI = config('LINKEDIN_REDIRECT_URI', default='http://localhost:8000/api/linkedin/oauth/callback')
+LINKEDIN_BOT_USERNAME = config('LINKEDIN_BOT_USERNAME', default='')
+LINKEDIN_BOT_PASSWORD = config('LINKEDIN_BOT_PASSWORD', default='')
 COMPETITOR_CACHE_DAYS = 7  # How long to cache competitor profiles
+
+# Stripe Configuration
+# ====================
+
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_ENDPOINT_SECRET = config('STRIPE_ENDPOINT_SECRET', default='')

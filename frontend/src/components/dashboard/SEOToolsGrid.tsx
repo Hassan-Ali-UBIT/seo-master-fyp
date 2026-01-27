@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@utils/helpers';
+import { useNavigate } from 'react-router-dom';
 
 interface SEOTool {
   id: string;
@@ -22,11 +23,23 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Optimize your LinkedIn profile for better visibility',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       ),
       enabled: true,
-      href: '/user/linkedin-optimization'
+      href: '/user/linkedin-tool'
+    },
+    {
+      id: 'linkedin-post-generator',
+      name: 'LinkedIn Post Generator',
+      description: 'Generate viral posts and AI images',
+      icon: (
+        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.06,9.02l0.92-0.92L13.92,7.04l-0.92,0.92L14.06,9.02 M13,3.87l3.6,3.6L7.1,16.96L3.5,13.38L13,3.87 M3,17.25l0,3.75 l3.75,0l0-1.5L5.25,19.5l-1.5-1.5L3.75,17.25 M20.71,7.04c0.39-0.39,0.39-1.02,0-1.41l-2.34-2.34c-0.47-0.47-1.12-0.29-1.41,0 l-1.83,1.83l3.75,3.75L20.71,7.04" />
+        </svg>
+      ),
+      enabled: true,
+      href: '/user/linkedin-tool/posts'
     },
     {
       id: 'google-maps',
@@ -34,7 +47,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Optimize your local business presence',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
         </svg>
       ),
       enabled: false
@@ -45,7 +58,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Enhance your social profiles',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
         </svg>
       ),
       enabled: false
@@ -56,7 +69,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Optimize your social content',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ),
       enabled: false
@@ -67,7 +80,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Grow your YouTube presence',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
         </svg>
       ),
       enabled: false
@@ -78,7 +91,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Optimize individual videos',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+          <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z" />
         </svg>
       ),
       enabled: false
@@ -89,7 +102,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Perfect your blog content',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
         </svg>
       ),
       enabled: false
@@ -100,7 +113,7 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Complete website optimization',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
         </svg>
       ),
       enabled: false
@@ -111,17 +124,18 @@ const SEOToolsGrid: React.FC<SEOToolsGridProps> = ({ className = '' }) => {
       description: 'Boost product visibility',
       icon: (
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
+          <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z" />
         </svg>
       ),
       enabled: false
     }
   ];
+  const navigate = useNavigate();
 
   const handleToolClick = (tool: SEOTool) => {
     if (tool.enabled && tool.href) {
       // Navigate to the tool page
-      window.location.href = tool.href;
+      navigate(tool.href);
     }
   };
 

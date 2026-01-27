@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SimpleHeader, Footer } from '@components/layout';
+import DashboardLayout from '@components/layout/DashboardLayout';
 
+import { getAdminUsers, type AdminUser } from '@/services/api/adminService';
+
+// Adapter to match UI interface if needed, or update UI interface
 interface User {
-  id: string;
+  id: string; // UI uses string for ID usually
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin'; // Keeping simpler for UI
   status: 'active' | 'inactive';
   subscription: string;
   joinedDate: string;
@@ -18,49 +21,33 @@ const AdminUsersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
-  // TODO: Replace with actual data from API
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'user',
-      status: 'active',
-      subscription: 'Premium',
-      joinedDate: '2024-01-15',
-      lastActive: '2024-12-27',
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'user',
-      status: 'active',
-      subscription: 'Basic',
-      joinedDate: '2024-02-20',
-      lastActive: '2024-12-26',
-    },
-    {
-      id: '3',
-      name: 'Bob Wilson',
-      email: 'bob@example.com',
-      role: 'user',
-      status: 'inactive',
-      subscription: 'Free',
-      joinedDate: '2024-03-10',
-      lastActive: '2024-11-15',
-    },
-    {
-      id: '4',
-      name: 'Alice Johnson',
-      email: 'alice@example.com',
-      role: 'user',
-      status: 'active',
-      subscription: 'Enterprise',
-      joinedDate: '2024-04-05',
-      lastActive: '2024-12-27',
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getAdminUsers();
+        // Transform API data to UI model
+        const mappedUsers: User[] = data.map(u => ({
+          id: u.id.toString(),
+          name: u.username || 'No Name', // API returns username in serializer
+          email: u.email,
+          role: 'user', // Default for now
+          status: u.status as 'active' | 'inactive',
+          subscription: u.subscription,
+          joinedDate: u.joined_date,
+          lastActive: u.last_active
+        }));
+        setUsers(mappedUsers);
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleToggleStatus = (userId: string) => {
     setUsers(
@@ -100,10 +87,8 @@ const AdminUsersPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <SimpleHeader />
-
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-2">Manage user accounts and permissions</p>
@@ -199,31 +184,28 @@ const AdminUsersPage: React.FC = () => {
             <div className="flex space-x-2">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  filterStatus === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 All
               </button>
               <button
                 onClick={() => setFilterStatus('active')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  filterStatus === 'active'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'active'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Active
               </button>
               <button
                 onClick={() => setFilterStatus('inactive')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  filterStatus === 'inactive'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'inactive'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Inactive
               </button>
@@ -251,9 +233,6 @@ const AdminUsersPage: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Active
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -280,11 +259,10 @@ const AdminUsersPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => handleToggleStatus(user.id)}
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                        }`}
                     >
                       {user.status}
                     </button>
@@ -294,28 +272,6 @@ const AdminUsersPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.lastActive).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={() => handleViewUser(user.id)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(user.id)}
-                        className="text-yellow-600 hover:text-yellow-900"
-                      >
-                        {user.status === 'active' ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}
@@ -328,10 +284,9 @@ const AdminUsersPage: React.FC = () => {
             </div>
           )}
         </div>
-      </main>
+      </div>
 
-      <Footer />
-    </div>
+    </DashboardLayout>
   );
 };
 

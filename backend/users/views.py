@@ -15,6 +15,7 @@ from common.exception_utils import CustomAPIException
 
 from .models import (
     User,
+    UserResources,
 )
 
 from .services import (
@@ -146,6 +147,12 @@ class GetUpdateUserView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
+class UserResourceView(generics.RetrieveAPIView):
+    serializer_class = UserResourceSerializer
+
+    def get_object(self):
+        return UserResources.objects.filter(user=self.request.user).order_by('-created_at').first()
 
 class ChangePasswordView(APIView):
 

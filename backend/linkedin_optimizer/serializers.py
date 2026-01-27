@@ -10,7 +10,8 @@ from .models import (
     OptimizationJob,
     OptimizationResult,
     ActionableChecklist,
-    KeywordCluster
+    KeywordCluster,
+    LinkedInPost
 )
 
 
@@ -203,6 +204,18 @@ class LinkedInOAuthInitSerializer(serializers.Serializer):
     state = serializers.CharField(required=False, max_length=255)
 
 
+class ProfileFetchUrlSerializer(serializers.Serializer):
+    """Serializer for fetching LinkedIn profile from URL"""
+    linkedin_profile_url = serializers.URLField(required=True)
+    use_cache = serializers.BooleanField(required=False, default=True)
+
+    def validate_linkedin_profile_url(self, value):
+        """Validate that the URL is a LinkedIn profile URL"""
+        if 'linkedin.com/in/' not in value:
+            raise serializers.ValidationError("Must be a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/username)")
+        return value
+
+
 class LinkedInOAuthCallbackSerializer(serializers.Serializer):
     """Serializer for LinkedIn OAuth callback"""
     code = serializers.CharField(required=True)
@@ -217,8 +230,8 @@ class LinkedInOAuthCallbackSerializer(serializers.Serializer):
 
 class ProfileHistorySerializer(serializers.ModelSerializer):
     """Serializer for profile optimization history"""
-    latest_result = serializers.SerializerMethodField()
-    optimization_count = serializers.SerializerMethodField()
+    optimization_results = OptimizationResultSerializer(many=True, read_only=True)
+    context = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfileSnapshot
@@ -228,22 +241,36 @@ class ProfileHistorySerializer(serializers.ModelSerializer):
             'raw_input_type',
             'linkedin_profile_url',
             'created_at',
-            'latest_result',
-            'optimization_count'
+            'context',
+            'optimization_results'
         ]
         read_only_fields = ['id', 'created_at']
 
-    def get_latest_result(self, obj):
-        """Get the latest optimization result for this profile"""
-        latest = obj.optimization_results.first()
-        if latest:
-            return {
-                'id': latest.id,
-                'seo_score': latest.seo_score,
-                'created_at': latest.created_at
-            }
+    def get_context(self, obj):
+        # Since relation is now ForeignKey (1-to-many), retrieve the latest context
+        latest_context = obj.context.order_by('-created_at').first()
+        if latest_context:
+            return OptimizationContextSerializer(latest_context).data
         return None
 
     def get_optimization_count(self, obj):
         """Get total number of optimizations for this profile"""
         return obj.optimization_results.count()
+
+
+class LinkedInPostSerializer(serializers.ModelSerializer):
+    """Serializer for LinkedIn Post Drafts"""
+
+    class Meta:
+        model = LinkedInPost
+        fields = [
+            'id',
+            'topic',
+            'description',
+            'keywords',
+            'hook',
+            'image',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

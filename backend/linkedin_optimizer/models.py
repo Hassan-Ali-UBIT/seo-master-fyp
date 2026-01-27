@@ -51,7 +51,7 @@ class OptimizationContext(models.Model):
         ('lead', 'Lead/Principal'),
     ]
 
-    profile_snapshot = models.OneToOneField(
+    profile_snapshot = models.ForeignKey(
         UserProfileSnapshot,
         on_delete=models.CASCADE,
         related_name='context'
@@ -249,3 +249,29 @@ class ActionableChecklist(models.Model):
 
     def __str__(self):
         return f"{self.priority} - {self.action_item[:50]}"
+
+
+class LinkedInPost(models.Model):
+    """Generated LinkedIn Post Drafts"""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='linkedin_posts'
+    )
+    topic = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    keywords = models.TextField(blank=True, null=True)
+    hook = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='generated_posts/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.topic} - {self.created_at.strftime('%Y-%m-%d')}"
