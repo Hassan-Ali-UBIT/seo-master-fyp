@@ -1,0 +1,102 @@
+services:
+  app:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+      args:
+        - DEV=true
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+      - /env
+      - dev-static-data:/app/static
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: devdb
+      DB_USER: devuser
+      DB_PASSWORD: devpassword
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgis/postgis:17-3.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: devdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  celery:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+      args:
+        - DEV=true
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /env
+    command: celery -A seo_master_pro worker -l info
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: devdb
+      DB_USER: devuser
+      DB_PASSWORD: devpassword
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+      - app
+
+  celery-beat:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+      args:
+        - DEV=true
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /env
+    command: celery -A seo_master_pro beat -l info
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: devdb
+      DB_USER: devuser
+      DB_PASSWORD: devpassword
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+      - app
+
+volumes:
+  db_data:
+  dev-static-data:
