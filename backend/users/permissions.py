@@ -28,10 +28,15 @@ class IsSuperAdminAndEmailExists(permissions.BasePermission):
 
 class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
+        if request.user.is_superuser or request.user.is_staff:
+            return True
         return request.user and request.user.is_authenticated and request.user.userprofile  and request.user.userprofile.role.name in ['superadmin', 'admin']
 
 class IsAdminOrSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+
         return request.user and request.user.is_authenticated and request.user.userprofile.role and request.user.userprofile.role.name in ['admin', 'superadmin']
 
 class RolePermission(permissions.BasePermission):
@@ -43,12 +48,18 @@ class RolePermission(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+
         # For POST, PUT, PATCH, DELETE - only superadmin
         return request.user.userprofile.role and request.user.userprofile.role.name in ['superadmin', 'admin']
 
     def has_object_permission(self, request, view, obj):
         # For GET requests, allow all users, including unauthorized
         if request.method == 'GET':
+            return True
+
+        if request.user.is_superuser or request.user.is_staff:
             return True
 
         # For POST, PUT, PATCH, DELETE - only superadmin
@@ -63,6 +74,9 @@ class IsSuperAdminOrAuthenticated(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+
         # For POST, PUT, PATCH, DELETE - only superadmin
         return request.user.userprofile.role and request.user.userprofile.role.name in ['superadmin', 'admin']
 
@@ -70,6 +84,9 @@ class IsSuperAdminOrAuthenticated(permissions.BasePermission):
         # Only allow authenticated users to access GET requests
         if request.method == 'GET':
             return request.user and request.user.is_authenticated
+
+        if request.user.is_superuser or request.user.is_staff:
+            return True
 
         # For POST, PUT, PATCH, DELETE - only superadmin
         return request.user.userprofile.role and request.user.userprofile.role.name in ['superadmin', 'admin']
@@ -85,12 +102,18 @@ class IsSuperAdminOrReadOnly(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+
         # Restrict write actions (POST, PUT, PATCH, DELETE) to superadmin
         return request.user.userprofile.role and request.user.userprofile.role.name in ['superadmin', 'admin']
 
     def has_object_permission(self, request, view, obj):
         # Allow GET and HEAD requests for all users, including unauthenticated
         if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if request.user.is_superuser or request.user.is_staff:
             return True
 
         # Restrict write actions (POST, PUT, PATCH, DELETE) to superadmin
@@ -100,11 +123,17 @@ class IsAdmin(permissions.BasePermission):
     message = "You must be admin to perform requested operation"
 
     def has_permission(self, request, view):
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+
         return request.user.userprofile.role.name == "admin"
 
 class CustomPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
+
+        if request.user.is_superuser or request.user.is_staff:
+            return True
 
         view_permission = getattr(view, 'required_permission', None)
 
