@@ -53,7 +53,7 @@ class PricePlanViewSet(viewsets.ModelViewSet):
         """
         Optionally restricts the returned plans to those that are active.
         """
-        if self.request.user.is_authenticated and self.request.user.userprofile.role.name == 'superadmin':
+        if self.request.user.is_authenticated and self.request.user.userprofile.role.name in ['superadmin', 'admin']:
             return self.queryset.all().order_by('-created_at')
         else:
             return self.queryset.filter(is_active=True).exclude(billing_period='other').order_by('-created_at')
@@ -65,7 +65,7 @@ class PricePlanViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
 
-        if user.userprofile.role.name != 'superadmin':
+        if user.userprofile.role.name not in ['superadmin', 'admin']:
             raise PermissionDenied("You are not authorized to perform this action.")
 
         plan_title = serializer.validated_data.get('title')
