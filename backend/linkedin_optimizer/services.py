@@ -17,6 +17,7 @@ import asyncio
 from asgiref.sync import async_to_sync
 from playwright.async_api import async_playwright
 from linkedin_scraper import PersonScraper, login_with_credentials
+from linkedin_scraper import ConsoleCallback, BrowserManager
 from tavily import TavilyClient
 
 from common.qwen_utils import call_qwen
@@ -108,6 +109,21 @@ class LinkedInOAuthService:
         return asyncio.run(run())
 
     @staticmethod
+    def _scrape_profile_async_with_session(profile_url: str):
+        """Internal async method to run linkedin-scraper"""
+
+        async def scrape_with_progress():
+            callback = ConsoleCallback()  # Prints progress to console
+
+            async with BrowserManager(headless=True) as browser:
+                await browser.load_session("credentials/linkedin_session.json")
+
+                scraper = PersonScraper(browser.page, callback=callback)
+                return await scraper.scrape(profile_url)
+
+        return asyncio.run(scrape_with_progress())
+
+    @staticmethod
     def fetch_profile_from_url(user, profile_url: str) -> Dict:
         """
         Fetch profile data directly from a LinkedIn URL using linkedin-scraper package
@@ -117,7 +133,7 @@ class LinkedInOAuthService:
         try:
             # Run the scraper (it handles browser login and scraping)
             # The _scrape_profile_async method uses asyncio.run internally
-            person = LinkedInOAuthService._scrape_profile_async(profile_url)
+            person = LinkedInOAuthService._scrape_profile_async_with_session(profile_url)
 
             if not person:
                  raise CustomAPIException(
