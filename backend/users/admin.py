@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User, Role, UserProfile, OTP
+from .models import User, Role, UserProfile, OTP, UserResources
 
 
 @admin.register(User)
@@ -47,3 +47,10 @@ class OTPAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'otp', 'type')
     list_filter = ('used', 'type')
     ordering = ('-expire_at',)
+
+@admin.register(UserResources)
+class UserResourcesAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan', 'created_at')
+    search_fields = ('user__email', 'plan__title')
+    list_filter = ('plan__title',)
+    ordering = ('-created_at',)

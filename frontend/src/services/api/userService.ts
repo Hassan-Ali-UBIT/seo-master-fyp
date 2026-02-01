@@ -21,5 +21,5 @@ export interface UserResources {
 
 export async function getUserResources() {
   const res = await api.get("users/me/user-resource/");
-  return res.data.data as UserResources;
+  return res.data.data.user_resource as UserResources | null;
 }

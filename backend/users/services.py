@@ -271,7 +271,8 @@ class EmailService:
         message = f'Your One-Time Password (OTP) is: {otp}. It will expire in {expire_minutes} minutes.'
         from_email = settings.DEFAULT_FROM_EMAIL
         html_message = render_to_string("users/register_email.html", context={"otp_code": otp})
-        image_list = [('seo-master-logo.png', 'image1')]
+        # image_list = [('seo-master-logo.png', 'image1')]
+        image_list = []
 
         EmailService.send_mail_with_image_file(
             subject, message, from_email,
@@ -284,7 +285,8 @@ class EmailService:
         message = f'Your One-Time Password (OTP) is: {otp}. It will expire in {expire_minutes} minutes.'
         from_email = settings.DEFAULT_FROM_EMAIL
         html_message = render_to_string("users/forget_password_email.html", context={"otp_code": otp})
-        image_list = [('seo-master-logo.png', 'image1')]
+        # image_list = [('seo-master-logo.png', 'image1')]
+        image_list = []
 
         EmailService.send_mail_with_image_file(
             subject, message, from_email,
@@ -297,7 +299,8 @@ class EmailService:
         message = 'Congratulations! Your account has been successfully verified.'
         from_email = settings.DEFAULT_FROM_EMAIL
         html_message = render_to_string("stakeholders/verification_email.html", context={})
-        image_list = [('seo-master-logo.png', 'image1')]
+        # image_list = [('seo-master-logo.png', 'image1')]
+        image_list = []
 
         EmailService.send_mail_with_image_file(
             subject, message, from_email,

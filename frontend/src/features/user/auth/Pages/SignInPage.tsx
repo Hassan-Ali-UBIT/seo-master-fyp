@@ -83,7 +83,7 @@ const SignInPage: React.FC = () => {
           </div>
 
           {/* Additional Help */}
-          <div className="text-center">
+          {/* <div className="text-center">
             <p className="text-sm text-gray-600">
               Having trouble signing in?{' '}
               <button
@@ -94,7 +94,7 @@ const SignInPage: React.FC = () => {
                 Get help
               </button>
             </p>
-          </div>
+          </div> */}
         </div>
       </main>
 

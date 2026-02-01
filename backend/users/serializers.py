@@ -175,11 +175,17 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'created_at', 'updated_at', 'profile')
+        fields = ('id', 'username', 'email', 'created_at', 'updated_at', 'profile')
 
     def update(self, instance, validated_data):
         # Update the user fields (email, etc.)
         return UserService.update_user(instance, validated_data)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['has_paid'] = instance.has_paid
+        representation['profile'] = get_serialized_or_none(UserProfileSerializer, instance.userprofile)
+        return representation
 
 class ForgetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -214,6 +220,12 @@ class UserResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserResources
         fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['plan_name'] = instance.plan.title
+        return representation
+
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """Serializer for admin user management"""

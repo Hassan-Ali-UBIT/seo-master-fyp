@@ -25,13 +25,13 @@ def get_object_or_404_with_message(queryset, error_message, **kwargs):
 
 def generate_success_url(request):
     try:
-        return config('STRIPE_PAYMENT_SUCCESS_LINK')
+        return config('STRIPE_PAYMENT_SUCCESS_LINK') + '?has_paid=true'
     except:
         return request.build_absolute_uri("/") + 'api/payment/success/'
 
 def generate_cancel_url(request):
     try:
-        return config('STRIPE_PAYMENT_CANCEL_LINK')
+        return config('STRIPE_PAYMENT_CANCEL_LINK') + '?has_paid=false'
     except:
         return request.build_absolute_uri("/") + 'api/payment/cancel/'
 

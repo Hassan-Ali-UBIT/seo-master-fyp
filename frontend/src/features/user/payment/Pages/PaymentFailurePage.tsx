@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@components/layout/DashboardLayout';
-import { clearTokens } from '@utils/tokenStorage';
+import { clearTokens, setHasPaid } from '@utils/tokenStorage';
 
 const PaymentFailurePage: React.FC = () => {
   const navigate = useNavigate();
@@ -9,6 +9,11 @@ const PaymentFailurePage: React.FC = () => {
 
   const errorMessage = searchParams.get('error') || 'An unexpected error occurred during payment processing.';
   const planName = searchParams.get('plan') || 'your selected plan';
+  const hasPaid = searchParams.get('has_paid') === 'true';
+
+  useEffect(() => {
+    setHasPaid(hasPaid);
+  }, [hasPaid]);
 
 
   const handleLogout = () => {

@@ -5,7 +5,7 @@ import { useAppSelector } from '@hooks/useAppSelector';
 import { getCurrentUser } from '@/services/api/authService';
 import { getUserResources } from '@/services/api/userService';
 import type { UserResources } from '@/services/api/userService';
-import { clearTokens } from '@utils/tokenStorage';
+import { clearTokens, setHasPaid } from '@utils/tokenStorage';
 
 interface UserProfile {
   id?: string;
@@ -41,9 +41,11 @@ const ProfilePage: React.FC = () => {
         ]);
 
         // Handle different response formats
-        let {email, profile} = profileResponse?.data || profileResponse;
+        let {email, username, has_paid, profile} = profileResponse?.data || profileResponse;
 
-        setUserProfile({email, ...profile});
+        setUserProfile({email, username, ...profile});
+        setHasPaid(has_paid);
+        console.log("resourcesResponse", resourcesResponse);
         setUserResources(resourcesResponse);
 
       } catch (err) {

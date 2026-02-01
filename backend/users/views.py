@@ -11,6 +11,7 @@ from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from common.exception_utils import CustomAPIException
+from common.serializer_utils import get_serialized_or_none
 
 
 from .models import (
@@ -148,11 +149,11 @@ class GetUpdateUserView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user
 
-class UserResourceView(generics.RetrieveAPIView):
-    serializer_class = UserResourceSerializer
-
-    def get_object(self):
-        return UserResources.objects.filter(user=self.request.user).order_by('-created_at').first()
+class UserResourceView(APIView):
+    def get(self, request):
+        user_resource = UserResources.objects.filter(user=self.request.user).order_by('-created_at').first()
+        serialized_user_resource = get_serialized_or_none(UserResourceSerializer, user_resource)
+        return Response({'user_resource': serialized_user_resource})
 
 class ChangePasswordView(APIView):
 

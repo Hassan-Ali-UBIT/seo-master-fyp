@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@components/layout/DashboardLayout';
-import { clearTokens } from '@utils/tokenStorage';
+import { clearTokens, setHasPaid } from '@utils/tokenStorage';
 
 const PaymentSuccessPage: React.FC = () => {
   const navigate = useNavigate();
@@ -9,10 +9,12 @@ const PaymentSuccessPage: React.FC = () => {
 
   const sessionId = searchParams.get('session_id');
   const planName = searchParams.get('plan') || 'Premium';
+  const hasPaid = searchParams.get('has_paid') === 'true';
 
   useEffect(() => {
     // TODO: Verify payment with backend using session_id
     console.log('Payment session ID:', sessionId);
+    setHasPaid(hasPaid);
   }, [sessionId]);
 
 
