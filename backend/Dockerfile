@@ -1,6 +1,7 @@
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
+
 LABEL maintainer="hassanali.tech25@gmail.com"
 
 WORKDIR /app
@@ -12,7 +13,8 @@ EXPOSE 8000
 
 ARG DEV=false
 
-# Install system dependencies
+# Install system dependencies (GDAL + previous Playwright libs + new ones)
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gdal-bin \
     libgdal-dev \
@@ -26,24 +28,68 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     binutils \
     libpng-dev \
     libjpeg-dev \
+    libgtk-3-0 \
+    libx11-xcb1 \
+    libx11-6 \
+    libxcb1 \
+    libxext6 \
+    libxrandr2 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxi6 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libatk1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libglib2.0-0 \
+    libxrender1 \
+    libasound2 \
+    libdbus-1-3 \
+    libxcb-shm0 \
+    libgstreamer1.0-0 \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-libav \
+    libgtk-4-1 \
+    libvulkan1 \
+    libgraphene-1.0-0 \
+    libwoff1 \
+    libvpx9 \
+    libopus0 \
+    libflite1 \
+    libjxl0.11 \
+    libharfbuzz-icu0 \
+    libenchant-2-2 \
+    libsecret-1-0 \
+    libhyphen0 \
+    libwayland-server0 \
+    libmanette-0.2-0 \
+    libgbm1 \
+    libdrm2 \
+    libgles2 \
+    libx264-164 \
     && rm -rf /var/lib/apt/lists/*
 
-# Debug GDAL installation
+# Debug GDAL
 RUN gdalinfo --version || true
 
-# Setup virtual environment and install Python dependencies
+# Virtualenv + Python deps + Playwright
 RUN python -m venv /env && \
     . /env/bin/activate && \
     pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt && \
-    playwright install --with-deps chromium && \
+    playwright install && \
     python -c "from django.contrib.gis import gdal; print(gdal.HAS_GDAL)" || true
 
-# Clean up
+# Cleanup
 RUN rm -rf /root/.cache && \
     rm -rf /tmp/requirements.txt
 
-# Create user and set permissions
+# User & permissions
 RUN useradd -m -s /bin/bash django-user && \
     mkdir -p /vol/web/media /vol/web/static && \
     chown -R django-user:django-user /vol /env && \
