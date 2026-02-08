@@ -5,6 +5,8 @@ aiosignal==1.3.2
 amqp==5.3.1
 annotated-types==0.7.0
 anyio==4.12.1
+apify_client==2.4.1
+apify_shared==2.2.0
 asgiref==3.8.1
 attrs==25.3.0
 beautifulsoup4==4.14.3
@@ -21,6 +23,7 @@ click==8.3.1
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
 click-repl==0.3.0
+colorama==0.4.6
 cytoolz==1.0.1
 Django==5.2.9
 django-after-response==0.2.2
@@ -60,11 +63,13 @@ httpcore==1.0.9
 httplib2==0.22.0
 httpx==0.28.1
 idna==3.10
+impit==0.9.3
 jmespath==1.0.1
 kombu==5.6.2
 linkedin-api==2.3.1
 linkedin_scraper==3.0.1
 lxml==5.4.0
+more-itertools==10.8.0
 multidict==6.4.4
 oauthlib==3.3.1
 packaging==25.0

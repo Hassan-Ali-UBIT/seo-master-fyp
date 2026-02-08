@@ -34,3 +34,13 @@ export const getAdminPayments = async () => {
     const response = await api.get('/dashboard/payments/');
     return response.data.data;
 };
+
+export const deleteUser = async (userId: number) => {
+    const response = await api.delete(`/dashboard/users/${userId}/`);
+    return response.data;
+};
+
+export const updateUserStatus = async (userId: number, isActive: boolean) => {
+    const response = await api.patch(`/dashboard/users/${userId}/`, { is_active: isActive });
+    return response.data;
+};

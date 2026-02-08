@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth
@@ -93,6 +94,25 @@ class AdminUserListView(APIView):
         users = User.objects.all().order_by('-created_at')
         serializer = AdminUserSerializer(users, many=True)
         return Response(serializer.data)
+
+class AdminUserDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrSuperAdmin]
+
+    def patch(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        is_active = request.data.get('is_active')
+
+        if is_active is not None:
+            user.is_active = is_active
+            user.save()
+            return Response({"message": f"User status updated to {'active' if is_active else 'inactive'}"})
+
+        return Response({"error": "is_active field is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        user.delete()
+        return Response({"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class AdminPaymentListView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminOrSuperAdmin]

@@ -16,6 +16,7 @@ from django.contrib.auth import get_user_model
 from django.core.signing import Signer, BadSignature
 import requests
 
+from common.apify_utils import scrape_linkedin_profile
 from common.exception_utils import CustomAPIException
 from users.permissions import HasLinkedInOptimizerPermission
 
@@ -87,7 +88,7 @@ class ProfileInputView(APIView):
 
         return Response(
             {
-                "data": UserProfileSnapshotSerializer(profile_snapshot).data,
+                **UserProfileSnapshotSerializer(profile_snapshot).data,
                 "message": "Profile snapshot created successfully"
             }
         )
@@ -258,7 +259,8 @@ class ProfileFetchUrlView(APIView):
                     )
 
             # Fetch profile data using the URL
-            profile_data = LinkedInOAuthService.fetch_profile_from_url(request.user, profile_url)
+            # profile_data = LinkedInOAuthService.fetch_profile_from_url(request.user, profile_url)
+            profile_data = scrape_linkedin_profile(profile_url)
 
             # Check if we got valid data
             if not profile_data.get('headline') and not profile_data.get('about'):

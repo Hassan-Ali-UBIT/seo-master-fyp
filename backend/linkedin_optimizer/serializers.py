@@ -17,6 +17,7 @@ from .models import (
 
 class UserProfileSnapshotSerializer(serializers.ModelSerializer):
     """Serializer for user profile snapshots"""
+    raw_input_type = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = UserProfileSnapshot

@@ -207,6 +207,7 @@ const LinkedInToolPage: React.FC = () => {
   }, [searchParams]);
 
   const handleLogout = () => {
+    clearTokens()
     navigate('/');
   };
 
@@ -294,12 +295,16 @@ const LinkedInToolPage: React.FC = () => {
       let profileId = data.profileSnapshotId;
 
       // If manual entry, create snapshot first
-      if (!profileId && data.connectionMethod === 'manual' && data.currentProfileData) {
+      if (!profileId && data.connectionMethod === 'manual') {
+        if (!data.currentProfileData || (!data.currentProfileData.headline && !data.currentProfileData.about && !data.currentProfileData.experience)) {
+          throw new Error("Please provide at least some profile information (Headline, About, or Experience)");
+        }
+
         const snapshotRes = await createProfileSnapshot({
           headline_text: data.currentProfileData.headline,
           about_text: data.currentProfileData.about,
           experience_text: data.currentProfileData.experience,
-          skills_text: data.currentProfileData.skills.join(', '),
+          skills_text: data.currentProfileData.skills?.join(', ') || '',
         });
         profileId = snapshotRes.data.id;
         // Update state with new ID
@@ -633,6 +638,25 @@ const LinkedInToolPage: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Current Experience
+            </label>
+            <textarea
+              value={data.currentProfileData?.experience || ''}
+              onChange={(e) => setData(prevData => ({
+                ...prevData,
+                currentProfileData: {
+                  ...(prevData.currentProfileData || { headline: '', about: '', skills: [] }),
+                  experience: e.target.value
+                }
+              }))}
+              placeholder="Paste your current work experience details..."
+              rows={6}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Current Skills (comma-separated)
             </label>
             <input
@@ -726,6 +750,11 @@ const LinkedInToolPage: React.FC = () => {
           </label>
           <input
             type="text"
+            value={data.targetSkills.join(', ')}
+            onChange={(e) => setData({
+              ...data,
+              targetSkills: e.target.value.split(',').map(s => s.trim()).filter(s => s !== '')
+            })}
             placeholder="e.g., Kubernetes, Machine Learning, Product Strategy (comma-separated)"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
           />

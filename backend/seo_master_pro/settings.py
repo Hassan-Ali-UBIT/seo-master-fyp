@@ -313,3 +313,9 @@ COMPETITOR_CACHE_DAYS = 7  # How long to cache competitor profiles
 STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_ENDPOINT_SECRET = config('STRIPE_ENDPOINT_SECRET', default='')
+
+# API Keys for third-party services
+# ====================
+
+APIFY_API_KEY = config('APIFY_API_KEY', default='')
+APIFY_ACTOR_ID = config('APIFY_ACTOR_ID', default='')
